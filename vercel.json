@@ -1,0 +1,30 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "manage.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "/manage.py"
+      }
+    ],
+    "env": {
+      "DJANGO_SECRET_KEY": "django-insecure-516j=6iur060h2r+(wbkbt5nk%x62ymk5)skh$y!+cy-h-n2r+",
+      "DJANGO_SETTINGS_MODULE": "project.settings.production"
+    },
+    "build": {
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "project.settings.production"
+      },
+      "commands": [
+        "pip install -r requirements.txt", 
+        "python manage.py collectstatic --noinput",
+        "python manage.py migrate" 
+      ]
+    }
+  }
+  
