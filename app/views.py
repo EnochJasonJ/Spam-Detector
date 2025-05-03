@@ -4,10 +4,14 @@ from rest_framework.response import Response
 from rest_framework import status
 import torch
 from transformers import BertForSequenceClassification, BertTokenizer
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 
-model = BertForSequenceClassification.from_pretrained('app/my_model')
-tokenizer = BertTokenizer.from_pretrained('app/my_model')
+# model = BertForSequenceClassification.from_pretrained('app/my_model')
+model_name = "enoch10jason/spam-detector-model"
+# tokenizer = BertTokenizer.from_pretrained('app/my_model')
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
 model.eval()
 
 class CheckSpam(ListCreateAPIView):
