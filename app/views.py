@@ -2,12 +2,13 @@ from django.shortcuts import render
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
-from sklearn.feature_extraction.text import TfidfVectorizer
-import joblib
+import torch
+from transformers import BertForSequenceClassification, BertTokenizer
 
-# Load the trained model and fitted vectorizer
-model = joblib.load('app/spam_model.pkl')
-feature_extraction = joblib.load('app/feature_extraction.pkl')  # Assuming you saved it after fitting
+
+model = BertForSequenceClassification.from_pretrained('app/my_model')
+tokenizer = BertTokenizer.from_pretrained('app/my_model')
+model.eval()
 
 class CheckSpam(ListCreateAPIView):
     def post(self, request, *args, **kwargs):
@@ -16,12 +17,21 @@ class CheckSpam(ListCreateAPIView):
         if not message:
             return Response({'error': 'No message provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ensure message is passed as a list
-        input_data_features = feature_extraction.transform([message])
+     
+        inputs = tokenizer(message, return_tensors="pt", truncation=True, padding=True, max_length=512)
+
+       
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        inputs = {key: value.to(device) for key, value in inputs.items()}
+        model.to(device)
+
+       
+        with torch.no_grad():
+            outputs = model(**inputs)
         
-        prediction = model.predict(input_data_features)
-        
-        if prediction[0] == 0:
+        prediction = torch.argmax(outputs.logits, dim=-1).item()
+
+        if prediction == 0:
             return Response({'message': 'Spam'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Not Spam'}, status=status.HTTP_200_OK)
