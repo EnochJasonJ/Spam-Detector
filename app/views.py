@@ -9,30 +9,22 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 def download_model():
     model_dir = "models"
-    model_path = os.path.join(model_dir, "model.safetensors")
-
-    if os.path.exists(model_path):
+    if os.path.exists(os.path.join(model_dir, "pytorch_model.bin")):
         print("Model already exists. Skipping download.")
-        return model_path
+        return model_dir
     os.makedirs(model_dir, exist_ok=True)
     file_id = "1ZuOwayvVRt4Cp6tfbpNIVIWettaCge74"
     url = f"https://drive.google.com/uc?id={file_id}"
 
     print("Downloading model...")
-    gdown.download(url, model_path, quiet=False)
+    gdown.download(url, os.path.join(model_dir, "pytorch_model.bin"), quiet=False)
     print("Model downloaded successfully.")
-    return model_path
+    return model_dir
 
-model_path = download_model()
-
+model_dir = download_model()
 
 tokenizer = AutoTokenizer.from_pretrained("enoch10jason/spam-detector-model")
-
-model = AutoModelForSequenceClassification.from_pretrained(
-    "enoch10jason/spam-detector-model", 
-    state_dict=torch.load(model_path, map_location="cpu"),
-    num_labels=2
-)
+model = AutoModelForSequenceClassification.from_pretrained(model_dir, num_labels=2)
 model.eval()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
